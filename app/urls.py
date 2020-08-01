@@ -17,15 +17,15 @@ router.register(r'users', UserViewSet)
 router.register(r'users', UserCreateViewSet)
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="REST API",
-      default_version='v1',
-      description="E-commerce Sample",
-      contact=openapi.Contact(email="suneet@gmail.com"),
-      license=openapi.License(name="BSD License"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="REST API",
+        default_version='v1',
+        description="E-commerce Sample",
+        contact=openapi.Contact(email="suneet@gmail.com"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
