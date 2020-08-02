@@ -26,6 +26,7 @@ class Common(Configuration):
         # Your apps
         'app.catalogue',
         'app.cart',
+        'app.order',
         'app.users',
 
     )

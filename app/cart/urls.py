@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     # ex: /polls/
-    path('', views.BasketView.as_view(), name='basket')
+    path('', views.BasketRetrieveCreate.as_view(), name='basket')
 ]

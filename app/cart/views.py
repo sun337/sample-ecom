@@ -9,7 +9,7 @@ from app.cart.serializers import BasketSerializer
 from app.catalogue.serializers import AddProductSerializer
 
 
-class BasketView(APIView):
+class BasketRetrieveCreate(APIView):
     """
     GET: Retrieve your basket.
     POST: Add a certain quantity of a product to the basket.
@@ -19,14 +19,11 @@ class BasketView(APIView):
         "quantity": 6
     }
     """
-
     permission_classes = (IsAuthenticated,)
     add_product_serializer_class = AddProductSerializer
     serializer_class = BasketSerializer
 
     def get(self, request, *args, **kwargs):  # pylint: disable=redefined-builtin
-        if not request.user.is_authenticated:
-            raise ParseError('You must login to retrieve your cart.')
         basket = get_user_basket(request.user)
         ser = self.serializer_class(basket, context={"request": request})
         return Response(ser.data)
@@ -56,5 +53,4 @@ class BasketView(APIView):
             basket.add_product(product, quantity=quantity)
             ser = self.serializer_class(basket, context={"request": request})
             return Response(ser.data)
-
         return Response({"reason": p_ser.errors}, status=status.HTTP_406_NOT_ACCEPTABLE)
