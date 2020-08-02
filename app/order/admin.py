@@ -1,6 +1,4 @@
 from django.contrib import admin
-
-from app.cart.models import Basket, Line
 from app.order.models import Order
 
 

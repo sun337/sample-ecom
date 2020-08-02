@@ -1,9 +1,7 @@
 from rest_framework import generics, response, status
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 
 from app.base.permissions import IsOwner
-from app.cart.models import Basket
 from app.order.models import Order
 from app.order.serializers import OrderSerializer, CheckoutSerializer
 

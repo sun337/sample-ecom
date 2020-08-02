@@ -1,12 +1,8 @@
-from django.test import override_settings
 from django.urls import reverse
-from django.contrib.auth.hashers import check_password
-from nose.tools import ok_, eq_
+from nose.tools import eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-import factory
-from ..models import Basket
 from ...catalogue.models import ProductClass, Product
 from ...users.test.factories import UserFactory
 
@@ -49,6 +45,27 @@ class ListCreateOrderTestCase(APITestCase):
             {"basket": response.data.get('id'), "total": response.data.get('total')}
         )
         eq_(response.status_code, status.HTTP_201_CREATED)
+
+    def test_place_order_authenticated_with_wrong_data(self):
+        """
+        Test if an authenticated user can add a product to his basket
+        """
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
+        response = self.client.post(
+            self.url,
+            {"basket": 1, "total": 200}
+        )
+        eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        response = self.client.post(
+            reverse('basket'),
+            {"product": self.product.id, "quantity": 0}
+        )
+        eq_(response.status_code, status.HTTP_200_OK)
+        response = self.client.post(
+            self.url,
+            {"basket": response.data.get('id'), "total": 200}
+        )
+        eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_list_orders_anonymous(self):
         """

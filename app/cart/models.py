@@ -7,7 +7,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 
-from app.cart.managers import OpenBasketManager, SavedBasketManager
+from app.cart.managers import OpenBasketManager  # , SavedBasketManager
 from app.catalogue.models import Product
 
 
@@ -45,7 +45,7 @@ class Basket(TimeStampedModel):
 
     objects = models.Manager()
     open = OpenBasketManager()
-    saved = SavedBasketManager()
+    # saved = SavedBasketManager()
 
     def __str__(self):
         return _(
@@ -58,13 +58,13 @@ class Basket(TimeStampedModel):
     # Basket Manipulation
     # ============
 
-    def flush(self):
-        """
-        Remove all lines from basket.
-        """
-        if self.status == self.FROZEN:
-            raise PermissionDenied("A frozen basket cannot be flushed")
-        self.lines.all().delete()
+    # def flush(self):
+    #     """
+    #     Remove all lines from basket.
+    #     """
+    #     if self.status == self.FROZEN:
+    #         raise PermissionDenied("A frozen basket cannot be flushed")
+    #     self.lines.all().delete()
 
     def add_product(self, product, quantity=1):
         """
@@ -167,19 +167,6 @@ class Basket(TimeStampedModel):
         # the first one found.
         for line in self.lines.all():
             return line.currency
-
-    # =============
-    # Query methods
-    # =============
-
-    def product_quantity(self, product):
-        """
-        Return the current quantity of a specific product and options
-        """
-        try:
-            return self.lines.get(product=product).quantity
-        except ObjectDoesNotExist:
-            return 0
 
 
 class Line(TimeStampedModel):

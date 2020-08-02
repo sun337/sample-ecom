@@ -1,12 +1,8 @@
-from django.test import override_settings
 from django.urls import reverse
-from django.contrib.auth.hashers import check_password
-from nose.tools import ok_, eq_
+from nose.tools import eq_
 from rest_framework.test import APITestCase
 from rest_framework import status
 from faker import Faker
-import factory
-from ..models import Basket
 from ...catalogue.models import ProductClass, Product
 from ...users.test.factories import UserFactory
 
@@ -22,8 +18,19 @@ class AddRetrieveBasketTestCase(APITestCase):
         self.url = reverse('basket')
         self.user = UserFactory()
         pc, created = ProductClass.objects.get_or_create(name='XY', slug='xy')
-        self.product1 = Product.objects.create(title='ABC', slug='abc', price=500, product_class=pc)
-        self.product2 = Product.objects.create(title='ABC', slug='abc', price=500, is_public=False, product_class=pc)
+        self.product1 = Product.objects.create(
+            title='ABC',
+            slug='abc',
+            price=500,
+            product_class=pc
+        )
+        self.product2 = Product.objects.create(
+            title='ABC',
+            slug='abc',
+            price=500,
+            is_public=False,
+            product_class=pc
+        )
 
     def test_add_product_anonymous(self):
         """

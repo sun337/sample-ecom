@@ -10,7 +10,13 @@ class Order(TimeStampedModel):
     """
     The main order model
     """
-    basket = models.ForeignKey(Basket, verbose_name=_("Basket"), null=True, blank=True, on_delete=models.SET_NULL)
+    basket = models.ForeignKey(
+        Basket,
+        verbose_name=_("Basket"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='orders',
@@ -27,4 +33,10 @@ class Order(TimeStampedModel):
         (CLOSED, _("Delivered - order has been successfully delivered")),
         (CANCELLED, _("Cancelled - order has been cancelled"))
     )
-    status = models.CharField(_("Status"), default=CREATED, max_length=100, blank=True, choices=STATUS_CHOICES)
+    status = models.CharField(
+        _("Status"),
+        default=CREATED,
+        max_length=100,
+        blank=True,
+        choices=STATUS_CHOICES
+    )
