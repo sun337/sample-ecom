@@ -1,5 +1,5 @@
 from rest_framework import generics, response, status
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from app.base.permissions import IsOwner
 from app.order.models import Order
@@ -20,21 +20,23 @@ class OrderDetail(generics.RetrieveAPIView):
     permission_classes = (IsOwner,)
 
 
-class OrderListCreate(APIView):
+class OrderListCreate(generics.GenericAPIView):
     order_serializer_class = OrderSerializer
     serializer_class = CheckoutSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return self.order_serializer_class
+        else:
+            return self.serializer_class
 
     def get(self, request):
         qs = Order.objects.filter(user=request.user)
-        # paginator = PageNumberPagination()
-        # paginator.page_size = 10
-        # result_page = paginator.paginate_queryset(qs, request)
-        # orders_data = self.order_serializer_class(result_page, many=True).data
-        # return paginator.get_paginated_response(orders_data)
         orders_data = self.order_serializer_class(qs, many=True).data
         return response.Response(orders_data)
 
-    def post(self, request, format=None, *args, **kwargs):
+    def post(self, request):
         c_ser = self.serializer_class(data=request.data, context={"request": request})
 
         if c_ser.is_valid():

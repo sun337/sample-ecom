@@ -1,14 +1,14 @@
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from app.cart.operations import get_user_basket
 from app.cart.serializers import BasketSerializer
 from app.catalogue.serializers import AddProductSerializer
 
 
-class BasketRetrieveCreate(APIView):
+class BasketRetrieveCreate(GenericAPIView):
     """
     GET: Retrieve your basket.
     POST: Add a certain quantity of a product to the basket.
@@ -21,6 +21,12 @@ class BasketRetrieveCreate(APIView):
     permission_classes = (IsAuthenticated,)
     add_product_serializer_class = AddProductSerializer
     serializer_class = BasketSerializer
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return self.serializer_class
+        else:
+            return self.add_product_serializer_class
 
     def get(self, request, *args, **kwargs):  # pylint: disable=redefined-builtin
         basket = get_user_basket(request.user)
