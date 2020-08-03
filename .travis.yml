@@ -10,7 +10,7 @@ script:
   - docker-compose run --rm web bash -c "flake8 . &&
                                          isort app --check --skip migrations --skip config &&
                                          python wait_for_postgres.py &&
-                                         ./manage.py test"
+                                         coverage run --source='.' ./manage.py test"
 
 notifications:
   email: false
