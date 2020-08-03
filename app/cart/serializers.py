@@ -29,13 +29,13 @@ class BasketSerializer(serializers.ModelSerializer):
     lines = BasketLineSerializer(many=True, read_only=True)
     total = serializers.DecimalField(decimal_places=2, max_digits=12, required=False)
     currency = serializers.CharField(required=False)
-    owner = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Basket
         fields = (
             "id",
-            "owner",
+            "user",
             "status",
             "lines",
             "total",

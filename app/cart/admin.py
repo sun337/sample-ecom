@@ -15,7 +15,7 @@ class LineInline(admin.TabularInline):
 
 @admin.register(Basket)
 class BasketAdmin(admin.ModelAdmin):
-    list_display = ('id', 'owner', 'status', 'num_lines',
+    list_display = ('id', 'user', 'status', 'num_lines',
                     'created', 'currency', 'total')
-    readonly_fields = ('owner', 'date_submitted')
+    readonly_fields = ('user', 'date_submitted')
     inlines = [LineInline]

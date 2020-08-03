@@ -4,7 +4,8 @@ from nose.tools import eq_
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ...catalogue.models import Product, ProductClass
+from ...cart.test.factories import BasketFactory
+from ...catalogue.test.factories import ProductFactory
 from ...users.test.factories import UserFactory
 
 fake = Faker()
@@ -18,8 +19,8 @@ class ListCreateOrderTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('order-list-create')
         self.user = UserFactory()
-        pc, created = ProductClass.objects.get_or_create(name='XY', slug='xy')
-        self.product = Product.objects.create(title='ABC', slug='abc', price=500, product_class=pc)
+        self.basket = BasketFactory(user=self.user)
+        self.product = ProductFactory()
 
     def test_place_order_anonymous(self):
         """
@@ -27,7 +28,7 @@ class ListCreateOrderTestCase(APITestCase):
         """
         response = self.client.post(
             self.url,
-            {"product": str(self.product.id), "quantity": 5}
+            {}
         )
         eq_(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -36,15 +37,10 @@ class ListCreateOrderTestCase(APITestCase):
         Test if an authenticated user can add a product to his basket and place order
         """
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
-        response = self.client.post(
-            reverse('basket'),
-            {"product": self.product.id, "quantity": 5}
-        )
-        eq_(response.status_code, status.HTTP_200_OK)
-
+        self.basket.add_product(self.product)
         response = self.client.post(
             self.url,
-            {"basket": response.data.get('id'), "total": response.data.get('total')}
+            {"basket": self.basket.id, "total": self.basket.total}
         )
         eq_(response.status_code, status.HTTP_201_CREATED)
 
@@ -56,30 +52,26 @@ class ListCreateOrderTestCase(APITestCase):
         Test so user can not manipulate data while placing order
         """
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
+
+        # Invalid basket id
         response = self.client.post(
             self.url,
             {"basket": 1, "total": 200}
         )
         eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-        response = self.client.get(
-            reverse('basket')
-        )
-        eq_(response.status_code, status.HTTP_200_OK)
+        # empty basket can not be submitted
         response = self.client.post(
             self.url,
-            {"basket": response.data.get('id'), "total": 0}
+            {"basket": self.basket.id, "total": 0}
         )
         eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-        response = self.client.post(
-            reverse('basket'),
-            {"product": self.product.id, "quantity": 1}
-        )
-        eq_(response.status_code, status.HTTP_200_OK)
+        # basket total != total submitted
+        self.basket.add_product(self.product)
         response = self.client.post(
             self.url,
-            {"basket": response.data.get('id'), "total": 0}
+            {"basket": self.basket.id, "total": 10}
         )
         eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
@@ -97,3 +89,5 @@ class ListCreateOrderTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
         response = self.client.get(self.url)
         eq_(response.status_code, status.HTTP_200_OK)
+        for order in response.data:
+            eq_(order.user, self.user)

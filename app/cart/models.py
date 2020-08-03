@@ -15,15 +15,13 @@ class Basket(TimeStampedModel):
     """
     Basket object
     """
-    owner = models.ForeignKey(
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='baskets',
         on_delete=models.CASCADE,
         verbose_name=_("Owner")
     )
     # Basket statuses
-    # - Frozen is for when a basket is in the process of being submitted
-    #   and we need to prevent any changes to it.
     OPEN, SAVED, FROZEN, SUBMITTED = ("Open", "Saved", "Frozen", "Submitted")
     STATUS_CHOICES = (
         (OPEN, _("Open - currently active")),
@@ -39,14 +37,13 @@ class Basket(TimeStampedModel):
 
     def __str__(self):
         return _(
-            "%(status)s basket (owner: %(owner)s, lines: %(num_lines)d)") \
+            "%(status)s basket (user: %(user)s, lines: %(num_lines)d)") \
             % {'status': self.status,
-               'owner': self.owner,
+               'user': self.user,
                'num_lines': self.num_lines}
 
     # ============
-    # Basket Manipulation
-    # ============
+    # Basket methods
 
     def add_product(self, product, quantity=1):
         """
@@ -81,19 +78,14 @@ class Basket(TimeStampedModel):
         self.date_submitted = now()
         self.save()
 
-    # =======
-    # Helpers
-    # =======
-
     def _get_total(self):
         """
-        For executing a named method on each line of the basket
-        and returning the total.
+        For sum of each line of the basket and returning the total.
         """
         total = Decimal('0.00')
         for line in self.lines.all():
             try:
-                total += getattr(line, 'price')*getattr(line, 'quantity')
+                total += getattr(line, 'price') * getattr(line, 'quantity')
             except ObjectDoesNotExist:
                 # Handle situation where the product may have been deleted
                 pass
@@ -101,7 +93,6 @@ class Basket(TimeStampedModel):
 
     # ==========
     # Properties
-    # ==========
 
     @property
     def total(self):

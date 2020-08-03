@@ -5,14 +5,6 @@ from app.base.permissions import IsOwner
 from app.order.models import Order
 from app.order.serializers import CheckoutSerializer, OrderSerializer
 
-# class OrderList(generics.ListAPIView):
-#     serializer_class = OrderSerializer
-#     permission_classes = (IsOwner,)
-#
-#     def get_queryset(self):
-#         qs = Order.objects.all()
-#         return qs.filter(user=self.request.user)
-
 
 class OrderDetail(generics.RetrieveAPIView):
     queryset = Order.objects.all()
@@ -24,6 +16,7 @@ class OrderListCreate(generics.GenericAPIView):
     order_serializer_class = OrderSerializer
     serializer_class = CheckoutSerializer
     permission_classes = (IsAuthenticated,)
+    queryset = Order.objects
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

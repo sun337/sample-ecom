@@ -25,7 +25,7 @@ class Order(TimeStampedModel):
     )
     currency = models.CharField(_("Currency"), max_length=12, default='INR')
     total = models.DecimalField(_("Order total"), decimal_places=2, max_digits=12)
-    # Use this field to indicate that an order is on hold / awaiting payment
+    # Use the status field to indicate that an order is processing / cancelled
     CREATED, PROCESSING, CLOSED, CANCELLED = ("Created", "Processing", "Delivered", "Cancelled")
     STATUS_CHOICES = (
         (CREATED, _("Created - order placed")),
