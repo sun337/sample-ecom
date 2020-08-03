@@ -1,9 +1,11 @@
 from django.urls import reverse
-from nose.tools import eq_
-from rest_framework.test import APITestCase
-from rest_framework import status
 from faker import Faker
-from ...catalogue.models import ProductClass, Product
+from nose.tools import eq_
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from ...catalogue.models import Product, ProductClass
+from ...catalogue.test.factories import ProductFactory
 from ...users.test.factories import UserFactory
 
 fake = Faker()
@@ -17,20 +19,8 @@ class AddRetrieveBasketTestCase(APITestCase):
     def setUp(self):
         self.url = reverse('basket')
         self.user = UserFactory()
-        pc, created = ProductClass.objects.get_or_create(name='XY', slug='xy')
-        self.product1 = Product.objects.create(
-            title='ABC',
-            slug='abc',
-            price=500,
-            product_class=pc
-        )
-        self.product2 = Product.objects.create(
-            title='ABC',
-            slug='abc',
-            price=500,
-            is_public=False,
-            product_class=pc
-        )
+        self.product1 = ProductFactory()
+        self.product2 = ProductFactory(is_public=False)
 
     def test_add_product_anonymous(self):
         """
@@ -42,7 +32,7 @@ class AddRetrieveBasketTestCase(APITestCase):
         )
         eq_(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_add_product_authenticated(self):
+    def test_add_not_public_product_authenticated(self):
         """
         Test if an authenticated user can add a product to his basket
         """
@@ -52,14 +42,31 @@ class AddRetrieveBasketTestCase(APITestCase):
             {"product": self.product2.id, "quantity": 5}
         )
         eq_(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_add_product_authenticated(self):
+        """
+        Test if an authenticated user can add a product to his basket
+        """
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
         response = self.client.post(
             self.url,
             {"product": self.product1.id, "quantity": 5}
         )
         eq_(response.status_code, status.HTTP_200_OK)
         line0 = response.data.get('lines')[0]
-        eq_(line0["product"], self.product1.id)
+        eq_(str(line0["product"]), self.product1.id)
         eq_(line0["quantity"], 5)
+
+    def test_add_product_with_wrong_data(self):
+        """
+        Test if an authenticated user can add a product to his basket
+        """
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.user.auth_token}')
+        response = self.client.post(
+            self.url,
+            {"product": self.product1.id, "quantity": -1}
+        )
+        eq_(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_retrieve_basket_anonymous(self):
         """

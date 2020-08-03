@@ -3,8 +3,7 @@ from rest_framework.views import APIView
 
 from app.base.permissions import IsOwner
 from app.order.models import Order
-from app.order.serializers import OrderSerializer, CheckoutSerializer
-
+from app.order.serializers import CheckoutSerializer, OrderSerializer
 
 # class OrderList(generics.ListAPIView):
 #     serializer_class = OrderSerializer

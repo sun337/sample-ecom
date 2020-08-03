@@ -1,12 +1,12 @@
 import uuid
 
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
-from django.utils.translation import pgettext_lazy
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext_lazy
 from model_utils.models import TimeStampedModel
+from rest_framework.exceptions import ValidationError
 
 
 class ProductClass(models.Model):
@@ -69,13 +69,6 @@ class Product(TimeStampedModel):
         else:
             return self.id
 
-    def get_absolute_url(self):
-        """
-        Return a product's absolute URL
-        """
-        return reverse('catalogue:detail',
-                       kwargs={'product_slug': self.slug, 'pk': self.id})
-
     def clean(self):
         """
         Validate a product.
@@ -87,26 +80,5 @@ class Product(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.get_title())
+            self.slug = slugify(self.title)
         super().save(*args, **kwargs)
-
-    # Properties
-    @property
-    def has_stockrecords(self):
-        """
-        Test if this product has any stockrecords
-        """
-        return self.stockrecords.exists()
-
-    @property
-    def num_stockrecords(self):
-        return self.stockrecords.count()
-
-    @property
-    def attribute_summary(self):
-        """
-        Return a string of all of a product's attributes
-        """
-        attributes = self.attribute_values.all()
-        pairs = [attribute.summary() for attribute in attributes]
-        return ", ".join(pairs)

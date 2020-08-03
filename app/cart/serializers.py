@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from app.cart.models import Line, Basket
+from app.cart.models import Basket, Line
 
 User = get_user_model()
 

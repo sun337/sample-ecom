@@ -1,7 +1,6 @@
-
 from django.db import transaction
-from rest_framework import serializers, exceptions
 from django.utils.translation import gettext_lazy as _
+from rest_framework import exceptions, serializers
 
 from app.cart.models import Basket
 from app.order.models import Order
@@ -32,9 +31,9 @@ class CheckoutSerializer(serializers.Serializer):
 
         basket = attrs.get("basket")
 
-        if basket.num_items <= 0:
-            message = _("Cannot checkout with empty basket")
-            raise serializers.ValidationError(message)
+        # if basket.num_items <= 0:
+        #     message = _("Cannot checkout with empty basket")
+        #     raise serializers.ValidationError(message)
 
         posted_total = attrs.get("total")
         total = basket.total

@@ -1,13 +1,13 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
+from rest_framework.exceptions import ValidationError
 
-from app.cart.managers import OpenBasketManager  # , SavedBasketManager
 from app.catalogue.models import Product
 
 
@@ -32,20 +32,10 @@ class Basket(TimeStampedModel):
         (SUBMITTED, _("Submitted - has been ordered at the checkout")),
     )
     status = models.CharField(_("Status"), max_length=128, default=OPEN, choices=STATUS_CHOICES)
-
     date_submitted = models.DateTimeField(_("Date submitted"), null=True, blank=True)
 
     # Only if a basket is in one of these statuses can it be edited
     editable_statuses = (OPEN, SAVED)
-
-    class Meta:
-        app_label = 'cart'
-        verbose_name = _('Basket')
-        verbose_name_plural = _('Baskets')
-
-    objects = models.Manager()
-    open = OpenBasketManager()
-    # saved = SavedBasketManager()
 
     def __str__(self):
         return _(
@@ -58,14 +48,6 @@ class Basket(TimeStampedModel):
     # Basket Manipulation
     # ============
 
-    # def flush(self):
-    #     """
-    #     Remove all lines from basket.
-    #     """
-    #     if self.status == self.FROZEN:
-    #         raise PermissionDenied("A frozen basket cannot be flushed")
-    #     self.lines.all().delete()
-
     def add_product(self, product, quantity=1):
         """
         Add a product to the basket
@@ -74,22 +56,22 @@ class Basket(TimeStampedModel):
             self.save()
 
         if not product.price:
-            raise ValueError("Strategy hasn't found a price for product %s" % product)
+            raise ValidationError("Strategy hasn't found a price for product %s" % product)
 
         defaults = {
             'quantity': quantity,
             'price': product.price,
             'currency': product.currency,
         }
-        line, created = self.lines.get_or_create(product=product, defaults=defaults)
-        if not created:
-            line.quantity = max(0, line.quantity + quantity)
-            line.save()
-            if line.quantity <= 0:
-                line.delete()
-
-    # add_product.alters_data = True
-    # add = add_product
+        try:
+            line, created = self.lines.get_or_create(product=product, defaults=defaults)
+            if not created:
+                line.quantity = max(0, line.quantity + quantity)
+                line.save()
+                if line.quantity <= 0:
+                    line.delete()
+        except Exception as e:
+            raise ValidationError(str(e))
 
     def submit(self):
         """
@@ -98,7 +80,6 @@ class Basket(TimeStampedModel):
         self.status = self.SUBMITTED
         self.date_submitted = now()
         self.save()
-    submit.alters_data = True
 
     # =======
     # Helpers
@@ -134,7 +115,7 @@ class Basket(TimeStampedModel):
         """
         Test if this basket is empty.
         """
-        return self.id is None or self.num_lines == 0
+        return self.id is None or self.num_lines == 0 or self.num_items == 0
 
     @property
     def num_lines(self):
@@ -151,10 +132,6 @@ class Basket(TimeStampedModel):
         return sum(line.quantity for line in self.lines.all())
 
     @property
-    def is_submitted(self):
-        return self.status == self.SUBMITTED
-
-    @property
     def can_be_edited(self):
         """
         Test if a basket can be edited
@@ -163,8 +140,6 @@ class Basket(TimeStampedModel):
 
     @property
     def currency(self):
-        # Since all lines should have the same currency, return the currency of
-        # the first one found.
         for line in self.lines.all():
             return line.currency
 
@@ -190,11 +165,8 @@ class Line(TimeStampedModel):
     price = models.DecimalField(_('Price incl. Tax'), decimal_places=2, max_digits=12, null=True)
 
     class Meta:
-        app_label = 'cart'
         # Enforce sorting by order of creation.
         ordering = ['created', 'pk']
-        verbose_name = _('Basket line')
-        verbose_name_plural = _('Basket lines')
 
     def __str__(self):
         return _(
