@@ -4,7 +4,6 @@ from nose.tools import eq_
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ...catalogue.models import Product, ProductClass
 from ...catalogue.test.factories import ProductFactory
 from ...users.test.factories import UserFactory
 
