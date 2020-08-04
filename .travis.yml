@@ -8,9 +8,9 @@ python:
 jobs:
   include:
     - stage: Lint and tests
+      if: branch = master
       before_script:
         - docker-compose build
-      if: branch = master
       script:
         - docker-compose run --rm web bash -c "flake8 . &&
                                                isort app --check --skip migrations --skip config &&
