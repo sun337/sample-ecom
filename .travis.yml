@@ -4,16 +4,29 @@ services:
   - docker
 python:
   - "3.8"
-before_script:
-  - docker-compose build
-script:
-  - docker-compose run --rm web bash -c "flake8 . &&
-                                         isort app --check --skip migrations --skip config &&
-                                         python wait_for_postgres.py &&
-                                         coverage run --source='.' ./manage.py test"
 
-notifications:
-  email: false
+jobs:
+  include:
+    - stage: Linting and tests
+      before_script:
+        - docker-compose build
+      script:
+        - if [ "$TRAVIS_BRANCH" = "master" ]; then docker-compose run --rm web bash -c "flake8 . &&
+                                             isort app --check --skip migrations --skip config &&
+                                             python wait_for_postgres.py &&
+                                             coverage run --source='.' ./manage.py test" fi
 
-cache:
-  pip: true
+    - stage: Deploy
+      before_script:
+        - docker-compose build
+      script:
+        - if [ "$TRAVIS_BRANCH" = "dev" ]; then docker-compose run --rm web bash -c "flake8 . &&
+          isort app --check --skip migrations --skip config &&
+          python wait_for_postgres.py &&
+          coverage run --source='.' ./manage.py test" fi
+#
+#notifications:
+#  email: false
+#
+#cache:
+#  pip: true
