@@ -32,7 +32,7 @@ class CheckoutSerializer(serializers.Serializer):
         basket = attrs.get("basket")
 
         if request.user != basket.user:
-            message = _("Illegal checkout")
+            message = _("Can not checkout, this basket doesn't belong to you.")
             raise serializers.ValidationError(message)
 
         # if basket.num_items <= 0:

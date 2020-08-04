@@ -10,3 +10,4 @@ nav:
   - API:
     - Authentication: 'api/authentication.md'
     - Users: 'api/users.md'
+    - Basket: 'api/baskets.md'

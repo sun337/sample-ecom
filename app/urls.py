@@ -37,7 +37,7 @@ urlpatterns = [
     path('api/v1/cart/', include(cart_urls)),
     path('api/v1/orders/', include(order_urls)),
     path('api-token-auth/', auth_views.obtain_auth_token),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('accounts/', include('rest_framework.urls', namespace='rest_framework')),
 
     # the 'api-root' from django rest-frameworks default router
     # http://www.django-rest-framework.org/api-guide/routers/#defaultrouter
