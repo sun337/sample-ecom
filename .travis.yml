@@ -4,25 +4,16 @@ services:
   - docker
 python:
   - "3.8"
+before_script:
+  - docker-compose build
+script:
+  - docker-compose run --rm web bash -c "flake8 . &&
+                                         isort app --check --skip migrations --skip config &&
+                                         python wait_for_postgres.py &&
+                                         coverage run --source='.' ./manage.py test"
 
-jobs:
-  include:
-    - stage: Lint and tests
-      before_script:
-        - docker-compose build
-      script:
-        - docker-compose run --rm web bash -c "flake8 . &&
-                                               isort app --check --skip migrations --skip config &&
-                                               python wait_for_postgres.py &&
-                                               coverage run --source='.' ./manage.py test"
+notifications:
+  email: false
 
-    - stage: Deploy dev
-      if: branch = dev
-      provider: elasticbeanstalk
-        region: "us-east-2"
-        app: "docker-example-app"
-        env: "DockerExampleApp-env"
-        bucket_name: "elasticbeanstalk-us-east-2-936355730773"
-        bucket_path: "docker-example-app"
-        on:
-          branch: dev
+cache:
+  pip: true
