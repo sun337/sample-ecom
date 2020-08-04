@@ -7,26 +7,23 @@ python:
 
 jobs:
   include:
-    - stage: Linting and tests
+    - stage: Lint and tests
       before_script:
         - docker-compose build
+      if: branch = master
       script:
-        - if [ "$TRAVIS_BRANCH" = "master" ]; then docker-compose run --rm web bash -c "flake8 . &&
-                                             isort app --check --skip migrations --skip config &&
-                                             python wait_for_postgres.py &&
-                                             coverage run --source='.' ./manage.py test" fi
+        - docker-compose run --rm web bash -c "flake8 . &&
+                                               isort app --check --skip migrations --skip config &&
+                                               python wait_for_postgres.py &&
+                                               coverage run --source='.' ./manage.py test"
 
-    - stage: Deploy
-      before_script:
-        - docker-compose build
-      script:
-        - if [ "$TRAVIS_BRANCH" = "dev" ]; then docker-compose run --rm web bash -c "flake8 . &&
-          isort app --check --skip migrations --skip config &&
-          python wait_for_postgres.py &&
-          coverage run --source='.' ./manage.py test" fi
-#
-#notifications:
-#  email: false
-#
-#cache:
-#  pip: true
+    - stage: Deploy dev
+      if: branch = dev
+      provider: elasticbeanstalk
+        region: "us-east-2"
+        app: "docker-example-app"
+        env: "DockerExampleApp-env"
+        bucket_name: "elasticbeanstalk-us-east-2-936355730773"
+        bucket_path: "docker-example-app"
+        on:
+          branch: dev
